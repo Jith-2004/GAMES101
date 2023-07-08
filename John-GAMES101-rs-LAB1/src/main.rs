@@ -15,11 +15,17 @@ fn main() {
     let mut command_line = false;
     let mut filename = "output.png";
     let argv: Vec<String> = env::args().collect();
+    let mut n = Vector3::<f64>::new(0.0, 0.0, 1.0);
     if argv.len() >= 2 {
         command_line = true;
         angle = argv[1].parse().unwrap();
-        if argv.len() == 3 {
-            filename = &argv[2];
+        if argv.len() >= 5 {
+            n.x = argv[2].parse().unwrap();
+            n.y = argv[3].parse().unwrap();
+            n.z = argv[4].parse().unwrap();
+            if argv.len() == 6 {
+                filename = &argv[5];
+            }
         }
     }
 
@@ -35,22 +41,22 @@ fn main() {
 
     let mut k = 0;
     let mut frame_count = 0;
-    if command_line {
-        r.clear(rasterizer::Buffer::Both);
-        r.set_model(get_model_matrix(angle));
-        r.set_view(get_view_matrix(eye_pos));
-        r.set_projection(get_projection_matrix(45.0, 1.0, 0.1, 50.0));
-        r.draw_triangle(pos_id, ind_id, Primitive::Triangle);
-
-        let frame_buffer = r.frame_buffer();
-        let image = frame_buffer2cv_mat(frame_buffer);
-
-        imwrite(filename, &image, &Vector::default()).unwrap();
-        return;
-    }
+//    if command_line {
+//        r.clear(rasterizer::Buffer::Both);
+//        r.set_model(get_model_matrix(angle, n));
+//        r.set_view(get_view_matrix(eye_pos));
+//        r.set_projection(get_projection_matrix(45.0, 1.0, 0.1, 50.0));
+//        r.draw_triangle(pos_id, ind_id, Primitive::Triangle);
+//
+//        let frame_buffer = r.frame_buffer();
+//        let image = frame_buffer2cv_mat(frame_buffer);
+//
+//        imwrite(filename, &image, &Vector::default()).unwrap();
+//        return;
+//    }
     while k != 27 {
         r.clear(rasterizer::Buffer::Both);
-        r.set_model(get_model_matrix(angle));
+        r.set_model(get_model_matrix(angle, n));
         r.set_view(get_view_matrix(eye_pos));
         r.set_projection(get_projection_matrix(45.0, 1.0, 0.1, 50.0));
         r.draw_triangle(pos_id, ind_id, Primitive::Triangle);
