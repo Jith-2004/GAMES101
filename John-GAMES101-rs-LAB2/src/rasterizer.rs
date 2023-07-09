@@ -50,7 +50,7 @@ impl Rasterizer {
         r.width = w;
         r.height = h;
         r.frame_buf.resize((w * h) as usize, Vector3::zeros());
-        r.depth_buf.resize((w * h) as usize, 0.0);
+        r.depth_buf.resize((w * h * 9) as usize, 0.0);
         r
     }
 
@@ -167,18 +167,31 @@ impl Rasterizer {
             y1 = f64::min(y1, t.v[i].y);
             y2 = f64::max(y2, t.v[i].y);
         }
+        let mut offset: [(f64, f64); 9] = [(0.0, 0.0); 9];
+        for i in 0..3 {
+            for j in 0..3 {
+                offset[i * 3 + j] = ((2 * i + 1) as f64 / 6.0, (2 * j + 1) as f64 / 6.0);
+            }
+        }
         for x in (x1 as i32)..=(x2 as i32 + 1) {
             for y in (y1 as i32)..=(y2 as i32 + 1) {
-                let mut cx = x as f64 + 0.5;
-                let mut cy = y as f64 + 0.5;
-                if inside_triangle(cx, cy, &t.v) {
-                    let (alpha, beta, gamma) = compute_barycentric2d(cx, cy, &t.v);
-                    let z_interpolated = (alpha * t.v[0].z + beta * t.v[1].z +  gamma * t.v[2].z) / (alpha + beta + gamma);
-                    let index = self.get_index(x.try_into().unwrap(), y.try_into().unwrap()) as usize;
-                    if z_interpolated < self.depth_buf[index] {
-                        self.depth_buf[index] = z_interpolated;
-                        self.set_pixel(&Vector3::new(x as f64, y as f64, 0.0), &t.get_color());
+                let mut cnt = 0;
+                for i in 0..9 {
+                    let cx = x as f64 + offset[i].0;
+                    let cy = y as f64 + offset[i].1;
+                    if inside_triangle(cx, cy, &t.v) {
+                        let (alpha, beta, gamma) = compute_barycentric2d(cx, cy, &t.v);
+                        let z_interpolated = (alpha * t.v[0].z + beta * t.v[1].z +  gamma * t.v[2].z) / (alpha + beta + gamma);
+                        let dep_index = self.get_index(x.try_into().unwrap(), y.try_into().unwrap()) * 9 + i;
+                        if z_interpolated < self.depth_buf[dep_index as usize] {
+                            self.depth_buf[dep_index as usize] = z_interpolated;
+                            cnt += 1;
+                        }
                     }
+                }
+                if cnt > 0 {
+                    let index = self.get_index(x.try_into().unwrap(), y.try_into().unwrap()) as usize;
+                    self.set_pixel(&Vector3::new(x as f64, y as f64, 0.0), &(t.get_color() * cnt as f64 / 9.0 + self.frame_buf[index] * (9 - cnt) as f64 / 9.0));
                 }
             }
         }
