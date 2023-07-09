@@ -8,7 +8,9 @@ use nalgebra::{Vector3};
 use opencv::{
     Result,
 };
+use opencv::core::Vector;
 use opencv::highgui::{imshow, wait_key};
+use opencv::imgcodecs::imwrite;
 use crate::rasterizer::{Primitive, Rasterizer};
 use utils::*;
 
@@ -40,7 +42,7 @@ fn main() -> Result<()> {
     let mut k = 0;
     let mut frame_count = 0;
 
-    while k != 27 {
+    //while k != 27 {
         r.clear(rasterizer::Buffer::Both);
         r.set_model(get_model_matrix(0.0));
         r.set_view(get_view_matrix(eye_pos));
@@ -49,12 +51,13 @@ fn main() -> Result<()> {
 
         let frame_buffer = r.frame_buffer();
         let image = frame_buffer2cv_mat(frame_buffer);
+        imwrite("output.png", &image, &Vector::default()).unwrap();
+        Ok(())
+        //imshow("image", &image)?;
+        //k = wait_key(2000).unwrap();
+        //println!("frame count: {}", frame_count);
+        //frame_count += 1;
+    //}
 
-        imshow("image", &image)?;
-        k = wait_key(2000).unwrap();
-        println!("frame count: {}", frame_count);
-        frame_count += 1;
-    }
-
-    Ok(())
+    //Ok(())
 }

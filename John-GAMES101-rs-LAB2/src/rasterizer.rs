@@ -157,8 +157,31 @@ impl Rasterizer {
     }
 
     pub fn rasterize_triangle(&mut self, t: &Triangle) {
-        /*  implement your code here  */
-        
+        let mut x1 = t.v[0].x;
+        let mut x2 = t.v[0].x;
+        let mut y1 = t.v[0].y;
+        let mut y2 = t.v[0].y;
+        for i in 1..3 {
+            x1 = f64::min(x1, t.v[i].x);
+            x2 = f64::max(x2, t.v[i].x);
+            y1 = f64::min(y1, t.v[i].y);
+            y2 = f64::max(y2, t.v[i].y);
+        }
+        for x in (x1 as i32)..=(x2 as i32 + 1) {
+            for y in (y1 as i32)..=(y2 as i32 + 1) {
+                let mut cx = x as f64 + 0.5;
+                let mut cy = y as f64 + 0.5;
+                if inside_triangle(cx, cy, &t.v) {
+                    let (alpha, beta, gamma) = compute_barycentric2d(cx, cy, &t.v);
+                    let z_interpolated = (alpha * t.v[0].z + beta * t.v[1].z +  gamma * t.v[2].z) / (alpha + beta + gamma);
+                    let index = self.get_index(x.try_into().unwrap(), y.try_into().unwrap()) as usize;
+                    if z_interpolated < self.depth_buf[index] {
+                        self.depth_buf[index] = z_interpolated;
+                        self.set_pixel(&Vector3::new(x as f64, y as f64, 0.0), &t.get_color());
+                    }
+                }
+            }
+        }
     }
 
     pub fn frame_buffer(&self) -> &Vec<Vector3<f64>> {
@@ -171,9 +194,15 @@ fn to_vec4(v3: Vector3<f64>, w: Option<f64>) -> Vector4<f64> {
 }
 
 fn inside_triangle(x: f64, y: f64, v: &[Vector3<f64>; 3]) -> bool {
-    /*  implement your code here  */
-
-    false
+    let mut sgn = [false; 3];
+    for i in 0..3 {
+        let vec1 = Vector3::<f64>::new(x - v[i].x, y - v[i].y, 0.0);
+        let vec2 = Vector3::<f64>::new(v[(i + 2) % 3].x - v[i].x, v[(i + 2) % 3].y - v[i].y, 0.0);
+        if vec1.cross(&vec2).z > 0.0 {
+            sgn[i] = true;
+        }
+    }
+    sgn[0] == sgn[1] && sgn[1] == sgn[2]
 }
 
 fn compute_barycentric2d(x: f64, y: f64, v: &[Vector3<f64>; 3]) -> (f64, f64, f64) {
