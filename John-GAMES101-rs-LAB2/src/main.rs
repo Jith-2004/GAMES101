@@ -13,8 +13,10 @@ use opencv::highgui::{imshow, wait_key};
 use opencv::imgcodecs::imwrite;
 use crate::rasterizer::{Primitive, Rasterizer};
 use utils::*;
+use std::time::{Duration, Instant};
 
 fn main() -> Result<()> {
+    let now = Instant::now();
     let mut r = Rasterizer::new(700, 700);
     let eye_pos = Vector3::new(0.0, 0.0, 5.0);
     let pos = vec![Vector3::new(2.0, 0.0, -2.0),
@@ -51,7 +53,9 @@ fn main() -> Result<()> {
 
         let frame_buffer = r.frame_buffer();
         let image = frame_buffer2cv_mat(frame_buffer);
-        imwrite("output.png", &image, &Vector::default()).unwrap();
+        imwrite("output1.png", &image, &Vector::default()).unwrap();
+        let end = now.elapsed().as_secs();
+        println!("runtime {:?} s", end);
         Ok(())
         //imshow("image", &image)?;
         //k = wait_key(2000).unwrap();

@@ -170,7 +170,7 @@ impl Rasterizer {
         let mut offset: [(f64, f64); 9] = [(0.0, 0.0); 9];
         for i in 0..3 {
             for j in 0..3 {
-                offset[i * 3 + j] = ((2 * i + 1) as f64 / 6.0, (2 * j + 1) as f64 / 6.0);
+                offset[i * 1 + j] = ((2 * i + 1) as f64 / 6.0, (2 * j + 1) as f64 / 6.0);
             }
         }
         for x in (x1 as i32)..=(x2 as i32 + 1) {
