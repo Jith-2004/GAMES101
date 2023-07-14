@@ -25,8 +25,7 @@ fn main() -> Result<()> {
     let angle = 140.0;
     let mut r = Rasterizer::new(700, 700);
     let obj_path = "./models/spot/".to_owned();
-    let mut filename = "output.png".to_owned();
-    // let texture_path = "hmap.jpg".to_owned();
+    let mut filename = "output1.png".to_owned();
     let texture_path = "hmap.jpg".to_owned();
     let mut tex = Texture::new(&(obj_path.clone() + &texture_path));
     let mut active_shader: fn(&FragmentShaderPayload) -> Vector3<f64> = normal_fragment_shader; // 默认为<normal shader>

@@ -108,9 +108,47 @@ impl Rasterizer {
     }
 
     pub fn rasterize_triangle(&mut self, triangle: &Triangle, mvp: Matrix4<f64>) {
-        /*  Implement your code here  */
-
-
+        let v = triangle.to_vector4();
+        let mut x1 = triangle.v[0].x;
+        let mut x2 = triangle.v[0].x;
+        let mut y1 = triangle.v[0].y;
+        let mut y2 = triangle.v[0].y;
+        for i in 1..3 {
+            x1 = f64::min(x1, triangle.v[i].x);
+            x2 = f64::max(x2, triangle.v[i].x);
+            y1 = f64::min(y1, triangle.v[i].y);
+            y2 = f64::max(y2, triangle.v[i].y);
+        }
+        for x in (x1 as i32)..=(x2 as i32 + 1) {
+            for y in (y1 as i32)..=(y2 as i32 + 1) {
+                if inside_triangle(x as f64, y as f64, &triangle.v) == true {
+                    let (alpha, beta, gamma) = compute_barycentric2d(x as f64, y as f64, &triangle.v);
+                    let w = 1.0 / (alpha / v[0].w + beta / v[1].w + gamma / v[2].w);
+                    let z_interpolated = (alpha * triangle.v[0].z / v[0].w + beta * triangle.v[1].z / v[1].w +  gamma * triangle.v[2].z / v[2].w) * w;
+                    let dep_index = Rasterizer::get_index(self.height, self.width, x as usize, y as usize);
+                    //println!("ok");
+                    if z_interpolated < self.depth_buf[dep_index] {
+                        self.depth_buf[dep_index] = z_interpolated;
+                        let color_interpolated = (alpha * triangle.color[0] / v[0].w + beta * triangle.color[1] / v[1].w +  gamma * triangle.color[2] / v[2].w) * w;
+                        let normal_interpolated = (alpha * triangle.normal[0] / v[0].w + beta * triangle.normal[1] / v[1].w +  gamma * triangle.normal[2] / v[2].w) * w;
+                        let normal_interpolated = normal_interpolated.normalize();
+                        let tex_coor_interpolated = (alpha * triangle.tex_coords[0] / v[0].w + beta * triangle.tex_coords[1] / v[1].w +  gamma * triangle.tex_coords[2] / v[2].w) * w;
+                        let view_coor_interpolated = Vector3::new(
+                            alpha * mvp[(0, 0)] + beta * mvp[(1, 0)] + gamma * mvp[(2, 0)],
+                            alpha * mvp[(0, 1)] + beta * mvp[(1, 1)] + gamma * mvp[(2, 1)],
+                            alpha * mvp[(0, 2)] + beta * mvp[(1, 2)] + gamma * mvp[(2, 2)],
+                        );
+                        let Some(texture_) = &self.texture else {panic!("Wrong!")};
+                        let mut payload = FragmentShaderPayload::new(&color_interpolated, &normal_interpolated, &tex_coor_interpolated, Some(Rc::new(&texture_)));
+                        payload.view_pos = view_coor_interpolated;
+                        let Some(func) = self.fragment_shader else {panic!("Wrong!")};
+                        let color = func(&payload);
+                        println!("({}, {}, {})", color[0], color[1], color[2]);
+                        Rasterizer::set_pixel(self.height, self.width, &mut self.frame_buf, &Vector3::new(x as f64, y as f64, 1.0), &color);
+                    }
+                }
+            }
+        }
     }
     
     fn interpolate_Vec3(a: f64, b: f64, c: f64, vert1: Vector3<f64>, vert2: Vector3<f64>, vert3: Vector3<f64>, weight: f64) -> Vector3<f64> {
