@@ -126,7 +126,6 @@ impl Rasterizer {
                     let w = 1.0 / (alpha / v[0].w + beta / v[1].w + gamma / v[2].w);
                     let z_interpolated = (alpha * triangle.v[0].z / v[0].w + beta * triangle.v[1].z / v[1].w +  gamma * triangle.v[2].z / v[2].w) * w;
                     let dep_index = Rasterizer::get_index(self.height, self.width, x as usize, y as usize);
-                    //println!("ok");
                     if z_interpolated < self.depth_buf[dep_index] {
                         self.depth_buf[dep_index] = z_interpolated;
                         let color_interpolated = (alpha * triangle.color[0] / v[0].w + beta * triangle.color[1] / v[1].w +  gamma * triangle.color[2] / v[2].w) * w;
@@ -143,7 +142,6 @@ impl Rasterizer {
                         payload.view_pos = view_coor_interpolated;
                         let Some(func) = self.fragment_shader else {panic!("Wrong!")};
                         let color = func(&payload);
-                        println!("({}, {}, {})", color[0], color[1], color[2]);
                         Rasterizer::set_pixel(self.height, self.width, &mut self.frame_buf, &Vector3::new(x as f64, y as f64, 1.0), &color);
                     }
                 }

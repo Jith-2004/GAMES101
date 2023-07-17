@@ -88,7 +88,6 @@ pub fn load_triangles(obj_file: &str) -> Vec<Triangle> {
         // 记录图形每个面中连续三个顶点（小三角形）
         for j in 0..3 {
             let v = &mesh.positions[3 * idx[j]..3 * idx[j] + 3];
-            println!("({}, {}, {})", v[0], v[1], v[2]);
             triangles[vtx].set_vertex(j, Vector4::new(v[0] as f64, v[1] as f64, v[2] as f64, 1.0));
             let ns = &mesh.normals[3 * idx[j]..3 * idx[j] + 3];
             triangles[vtx].set_normal(j, Vector3::new(ns[0] as f64, ns[1] as f64, ns[2] as f64));
